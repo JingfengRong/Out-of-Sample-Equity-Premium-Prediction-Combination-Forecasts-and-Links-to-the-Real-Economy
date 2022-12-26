@@ -59,3 +59,21 @@ def feature_engineering(TRAIN_START_DATE:str = '2009-01-01',
                 }
     
     return train, test, info_dict
+
+
+def get_monthly_date_format(date_string:str) -> pd.Period:
+    """
+    Get the monthly date format for a given date string.
+
+    Parameters
+    ----------
+    date_string : str
+        The date string to parse.
+        
+    Returns
+    -------
+    pd.Period
+        The monthly date format.
+    """
+    monthly_date = pd.to_datetime(date_string).to_period('M')
+    return monthly_date
