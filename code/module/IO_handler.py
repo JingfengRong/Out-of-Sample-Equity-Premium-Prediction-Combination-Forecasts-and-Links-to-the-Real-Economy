@@ -9,15 +9,18 @@ def post_dataframe_to_latex_table(df: pd.DataFrame,
     """
     Output a dataframe to a LaTeX table.
 
-    Args:
-    ----
-        df (pd.DataFrame): The dataframe to be output.
-        table_name (str): The name of the LaTeX table.
-        float_format (str, optional): The format of the floats. Defaults to "%.3f"
-        target_folder_path (str, optional): The path to the folder where the
-        table will be saved. Defaults to '../../table/'
-        kwargs (dict, optional): Additional keyword arguments to pass to the
-        latex command.
+    Parameters:
+    -------
+    df (pd.DataFrame): The dataframe to be output.
+
+    table_name (str): The name of the LaTeX table.
+
+    float_format (str, optional): The format of the floats. Defaults to "%.3f"
+
+    target_folder_path (str, optional): The path to the folder where the
+    table will be saved. Defaults to '../../table/'
+
+    kwargs (dict, optional): Additional keyword arguments to pass to the latex command.
     
     Returns:
         None

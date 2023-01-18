@@ -26,13 +26,20 @@ def feature_engineering(TRAIN_START_DATE:str = '2009-01-01',
     """
     This is the main function for feature engineering.
 
-    Args:
+    Parameters
+    ----------
     TRAIN_START_DATE (str, optional): start date of training
     TRAIN_END_DATE (str, optional): end date of training
     TEST_START_DATE (str, optional): start date of testing
     TEST_END_DATE (str, optional): end date of testing
     TICKER_LIST (list[str], optional): list of ticker symbols
     user_defined_features_df (pd.DataFrame, optional): dataframe with user defined features
+
+    Returns
+    -------
+    pd.DataFrame: training data
+    pd.DataFrame: testing data
+    dict: information dictionary
     """
     equity_df = YahooDownloader(start_date = TRAIN_START_DATE, end_date = TEST_END_DATE, ticker_list = TICKER_LIST).fetch_data()
     fe = FeatureEngineer(use_technical_indicator=False)
@@ -82,26 +89,53 @@ def get_monthly_date_format(date_string:str, kwargs: dict = {}) -> pd.Period:
     monthly_date = pd.to_datetime(date_string, **kwargs).to_period('M')
     return monthly_date
 
-
-def get_econ_predictors(data_path:str = '../../data/econ_predictors_monthly_2021_Amit_Goyal.csv',
-                        START_DATE:str = '1947-01',
-                        END_DATE:str = '2005-04') -> pd.DataFrame:
-    '''
-    This function returns the economic predictions for the given date range.
+def get_quarterly_date_format(date_string:str, kwargs: dict = {}) -> pd.Period:
+    """
+    Get the quarterly date format for a given date string.
 
     Parameters
     ----------
-    data_path : str
-    START_DATE : str
-    END_DATE : str
+    date_string : str
+        The date string to parse.
+    kwargs : dict, optional
+        A dictionary of keyword arguments to pass to the function.
+        
+    Returns
+    -------
+    pd.Period
+        The quarterly date format.
+    """
+    monthly_date = pd.to_datetime(date_string, **kwargs).to_period('M')
+    quarterly_end_date = pd.Period(str(monthly_date.year) + '-' + str(3 * monthly_date.month), freq='M')
+    return quarterly_end_date
+
+def get_econ_predictors(data_freq = 'monthly',
+                        START_DATE:str = '1947-01',
+                        END_DATE:str = '2005-04') -> pd.DataFrame:
+    """
+    This function returns the economic predictions for the given date range.
+    The data is available for monthly and quarterly frequency.
+    The data is available from 1947-01 to 2005-04.
+
+    Parameters
+    ----------
+    data_freq (str, optional): monthly or quarterly
+    START_DATE (str, optional): start date of the data
+    END_DATE (str, optional): end date of the data
 
     Returns
     -------
-    pd.DataFrame 
-    '''
+    pd.DataFrame: economic predictors
+    """
+
+    date_freq_to_data_func_map = {'monthly': ('../../data/econ_predictors_monthly_2021_Amit_Goyal.csv',
+                                            get_monthly_date_format), 
+                                'quarterly': ('../../data/econ_predictors_quarterly_2021_Amit_Goyal.csv',
+                                            get_quarterly_date_format)}
+    data_path, date_format_func = date_freq_to_data_func_map[data_freq]
 
     data = pd.read_csv(data_path, index_col=0)
-    data.index = [get_monthly_date_format(str(x), {'format':'%Y%m'}) for x in data.index]
+    data.index = [date_format_func(str(x), {'format':'%Y%m'}) for x in data.index]
     econ_data = data[START_DATE:END_DATE]
 
     equity_price = econ_data['Index'].apply(lambda x: re.sub(r'[^\w\s|.]', '', x))
