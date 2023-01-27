@@ -38,7 +38,7 @@ def get_linear_prediction(X_train:np.array, y_train:np.array, X_test:np.array) -
     prediction: np.array
         Prediction on the test data
     """
-    model = LinearRegression().fit(X_train.reshape(-1, 1), y_train.reshape(-1, 1))
+    model = LinearRegression(positive=True).fit(X_train.reshape(-1, 1), y_train.reshape(-1, 1))
     prediction = model.predict(X_test.reshape(-1,1))
 
     return prediction
