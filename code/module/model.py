@@ -121,7 +121,7 @@ def get_ml_ret_prediction(model,
     grid_search_result = grid_search_generator.fit(X_train, y_train)
     performance_in_sample = grid_search_result.best_score_
     best_model = grid_search_result.best_estimator_
-    pred = best_model.predict(X_test)
+    pred = best_model.predict(X_test)[0]
 
     return pred, performance_in_sample
 
