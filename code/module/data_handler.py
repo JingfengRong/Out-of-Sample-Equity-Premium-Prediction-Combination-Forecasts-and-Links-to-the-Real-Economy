@@ -203,4 +203,8 @@ def get_econ_predictors(data_freq = 'monthly',
                             'Default Return Spread',
                             'Inflation']
 
+    if data_freq == 'quarterly':
+        econ_predictors['Invest Capital Ratio'] = econ_data['ik']
+        econ_predictors.dropna(inplace=True)
+        
     return econ_predictors
