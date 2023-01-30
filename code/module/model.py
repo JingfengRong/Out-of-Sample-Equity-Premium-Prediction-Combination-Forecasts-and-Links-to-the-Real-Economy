@@ -84,7 +84,7 @@ def get_ml_ret_prediction(model,
                           y_train:np.array, 
                           X_test:np.array, 
                           y_test:np.array = None
-                          ) -> np.array|dict:
+                          ) -> tuple(np.array, np.array):
     """
     This function is used to get the expected return prediction from ML model on the test data.
 
@@ -105,9 +105,8 @@ def get_ml_ret_prediction(model,
     
     Returns
     -------
-    np.array
+    tuple(np.array, np.array)
         Expected return prediction
-    dict
         In sample performance (e.g. R square)
     """
 
@@ -124,7 +123,7 @@ def get_ml_ret_prediction(model,
     best_model = grid_search_result.best_estimator_
     pred = best_model.predict(X_test)
 
-    return pred, {selection_criterion:performance_in_sample}
+    return pred, performance_in_sample
 
 
 def get_shrunk_covariance_matrix(data: np.ndarray|pd.DataFrame) -> np.ndarray:
