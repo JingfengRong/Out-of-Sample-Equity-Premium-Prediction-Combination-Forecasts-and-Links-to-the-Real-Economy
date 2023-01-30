@@ -222,7 +222,8 @@ def get_utility_gain_from_prediction(START_DATE: str,
 
     START_DATE = datetime.strptime(START_DATE, '%Y-%m')
     START_DATE = str(START_DATE.year - rolling_window_size) + '-' + str(START_DATE.month)
-    econ_predictors = get_econ_predictors(START_DATE=START_DATE, END_DATE=END_DATE)
+    data_frequency_dict = {12: 'monthly', 4: 'quarterly', 1: 'yearly'}
+    econ_predictors = get_econ_predictors(START_DATE=START_DATE, END_DATE=END_DATE, data_freq=data_frequency_dict[data_frequency])
     risk_free_bond = econ_predictors['Treasury Bill'] / 100
     if equity_return is None:
         stock_return = econ_predictors['Equity Premium']
@@ -249,12 +250,13 @@ def get_utility_gain_from_prediction(START_DATE: str,
     portfolio_return_0 = (w_0 @ returns).flatten()
     portfolio_return_1 = (w_1 @ returns).flatten()
 
-    mu_0 = np.mean(portfolio_return_0)
-    sigma_0 = np.var(portfolio_return_0)
+    # annualize the return according to Rapach (2010)
+    mu_0 = np.mean(portfolio_return_0) * data_frequency
+    sigma_0 = np.var(portfolio_return_0) * data_frequency
     uitility_0 = mu_0 - 0.5 * gamma * sigma_0
 
-    mu_1 = np.mean(portfolio_return_1)
-    sigma_1 = np.var(portfolio_return_1)
+    mu_1 = np.mean(portfolio_return_1) * data_frequency
+    sigma_1 = np.var(portfolio_return_1) * data_frequency
     uitility_1 = mu_1 - 0.5 * gamma * sigma_1
 
     utility_gain = uitility_1 - uitility_0
