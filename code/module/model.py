@@ -223,3 +223,59 @@ def get_combined_prediction(true_values: np.ndarray, prediction: np.ndarray, pre
     prediction_df = prediction_df.iloc[holdout_size:, :]
     
     return prediction_df
+
+def get_implied_expected_return(risk_free_rate:pd.DataFrame, 
+                                equities_returns_df:pd.DataFrame,
+                                W_efficient:pd.DataFrame,
+                                DATA_FREQUENCY:int = 4,
+                                INIT_WINDOW_SIZE:int = 17) -> pd.DataFrame:
+    '''
+    Returns the expected implied return for a given risk free rate and equity return matrix.
+
+    Parameters
+    ----------
+    risk_free_rate : pd.DataFrame
+        Risk free rate.
+    equities_returns_df : pd.DataFrame
+        Equity returns.
+    W_efficient : pd.DataFrame
+        MV-efficient portfolio weights.
+    DATA_FREQUENCY : int, optional
+        DESCRIPTION. The default is 12.
+    INIT_WINDOW_SIZE : int, optional
+        DESCRIPTION. The default is 17.
+
+    Returns
+    -------
+    expected_return : pd.DataFrame
+
+    '''
+    # TO DO
+    # check return df columns match weights df columns
+
+    # hyper-parameter
+    SAMPLE_SIZE = len(equities_returns_df)
+    N = stock_num = len(W_efficient.columns)
+    l = lagrange_multiplier = risk_free_rate
+    gamma = risk_averse = 2.4
+    equity_name_list = W_efficient.columns
+
+    SAMPLE_SIZE = equities_returns_df.shape[0]
+    tscv = TimeSeriesSplit(n_splits = SAMPLE_SIZE - DATA_FREQUENCY * INIT_WINDOW_SIZE,
+                           test_size=1)
+    sigma_t = [get_shrunk_covariance_matrix(equities_returns_df.iloc[train_index]) for i, (train_index, test_index) in enumerate(tscv.split(equities_returns_df))]
+
+    pred_size = len(sigma_t)
+    W_efficient = W_efficient.iloc[-pred_size:]
+    l = l.iloc[-pred_size:]
+
+    mu_implied = \
+        l.values.reshape(-1, 1, 1) + \
+        gamma * np.array(sigma_t).reshape((-1, N, N)) @ W_efficient.values.reshape(-1, N, 1)
+    
+    mu_implied = pd.DataFrame(mu_implied.reshape(-1, N), columns=equity_name_list)
+    mu_implied = mu_implied[:-1] # remove the last forecast
+    mu_implied.index = l.index[1:]
+    
+    return(mu_implied)
+    
