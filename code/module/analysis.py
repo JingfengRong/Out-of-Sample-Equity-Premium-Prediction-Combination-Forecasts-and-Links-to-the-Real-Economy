@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+from adjustText import adjust_text
 import sys
 sys.path.append('../module')
 from data_handler import get_econ_predictors
@@ -263,3 +264,44 @@ def get_utility_gain_from_prediction(START_DATE: str,
     utility_gain_percentage = utility_gain * 100
 
     return utility_gain_percentage
+
+def get_graphical_compare_of_replication(replication_df: pd.DataFrame,
+                                        figsize: tuple = (10, 10),
+                                        point_color: str = 'red',
+                                        diagonal_lline_color: str = 'blue',
+                                        arrow_color: str = 'black',):
+        '''
+
+        Parameters
+        ----------
+        replication_df : pd.DataFrame
+                a dataframe with two columns, the first column is the replication result, the second column is the original result
+        figsize : tuple
+                the size of the figure
+        point_color : str
+                the color of the points
+        diagonal_lline_color : str
+                the color of the diagonal line
+        arrow_color : str
+                the color of the arrows
+        
+        Returns
+        -------
+        None
+        '''
+    
+        max = replication_df.values.max()
+        min = replication_df.values.min()
+
+        fig = plt.figure(figsize=figsize)
+        plt.scatter(replication_df.iloc[:, 0], replication_df.iloc[:, 1], color=point_color)
+        plt.plot([min, max], [min, max], color=diagonal_lline_color, linestyle='dashed')
+
+        plt.xlabel(replication_df.columns[0])
+        plt.ylabel(replication_df.columns[1])
+        texts = [plt.text(replication_df.iloc[i, 0], replication_df.iloc[i, 1], label) for i, label in enumerate(replication_df.index)]
+        adjust_text(texts,arrowprops=dict(arrowstyle='->', color=arrow_color))
+        
+        plt.show()
+
+        return fig
