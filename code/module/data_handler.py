@@ -8,6 +8,7 @@ import datetime
 import warnings
 import itertools
 warnings.filterwarnings("ignore")
+from typing import Tuple, List, Dict, Union, Optional, Callable, Any
 
 
 from finrl.meta.preprocessor.yahoodownloader import YahooDownloader
@@ -208,3 +209,104 @@ def get_econ_predictors(data_freq = 'monthly',
         econ_predictors.dropna(inplace=True)
         
     return econ_predictors
+
+def get_equities_returns(data_freq: str = 'monthly') -> pd.DataFrame:
+    """
+    Load stock market data from a CSV file and calculate the monthly or quarterly returns
+    for the equity index and the risk-free rate.
+
+    Parameters:
+    -----------
+    data_freq : str, optional
+        The frequency of the data in the CSV file. Valid values are 'monthly' and 'quarterly'.
+        Default is 'monthly'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame containing the equity returns and the risk-free rate.
+
+    Raises:
+    -------
+    KeyError
+        If an invalid value is passed for the `data_freq` argument.
+
+    """
+    date_freq_to_data_func_map = {'monthly': ('../../data/econ_predictors_monthly_2021_Amit_Goyal.csv',
+                                              get_monthly_date_format),
+                                  'quarterly': ('../../data/econ_predictors_quarterly_2021_Amit_Goyal.csv',
+                                                get_quarterly_date_format)}
+    try:
+        data_path, date_format_func = date_freq_to_data_func_map[data_freq]
+    except KeyError:
+        raise KeyError("Invalid value for data_freq. Valid values are 'monthly' and 'quarterly'.")
+    data = pd.read_csv(data_path, index_col=0)
+    data.index = [date_format_func(str(x), {'format': '%Y%m'}) for x in data.index]
+    econ_data = data
+    equity_price = econ_data['Index'].apply(lambda x: re.sub(r'[^\w\s|.]', '', x)).astype(float).pct_change().dropna()
+    rf = econ_data['Rfree'].dropna()
+    
+    return pd.concat([equity_price, rf], axis=1)
+
+
+def get_equities_returns_volatility(data_freq: str = 'quarterly') -> pd.DataFrame:
+    """
+    Load stock market data from a CSV file, calculate the monthly or quarterly returns for the
+    equity index and the risk-free rate, and calculate the volatility (standard deviation) of the
+    returns for each quarter.
+
+    Parameters:
+    -----------
+    data_freq : str, optional
+        The frequency of the data in the CSV file. Valid values are 'monthly' and 'quarterly'.
+        Default is 'quarterly'.
+
+    Returns:
+    --------
+    pd.DataFrame
+        A DataFrame containing the volatility of the equity returns and the risk-free rate for each quarter.
+
+    Raises:
+    -------
+    KeyError
+        If an invalid value is passed for the `data_freq` argument.
+
+    """
+    data = get_equities_returns(data_freq = 'monthly')
+    data_vol = data.resample('Q').std()
+    data_vol.index = data_vol.index.asfreq('M', 'end')
+    
+    return data_vol
+
+
+def get_env_data(start_date: str, end_date: str, data_freq: str = 'quarterly') -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Retrieve economic predictors, equities returns, and equities returns volatility data within the specified dates.
+
+    Parameters:
+    -----------
+    start_date : str
+        The start date in 'YYYY' format.
+    end_date : str
+        The end date in 'YYYY' format.
+    data_freq : str
+        The frequency of the data, either 'quarterly' or 'monthly'.
+
+    Returns:
+    --------
+    A tuple of the following:
+        - A data frame containing the economic predictors within the specified dates
+        - A series of equities returns within the specified dates
+        - A series of equities returns volatility within the specified dates
+    """
+    data = get_econ_predictors(data_freq=data_freq, START_DATE=start_date, END_DATE=end_date)
+    data.pop('Equity Premium')
+    equities_returns = get_equities_returns(data_freq=data_freq)
+    equities_returns_vol = get_equities_returns_volatility(data_freq=data_freq)
+
+    data = data.loc[start_date:end_date]
+    index = data.index
+    equities_returns = equities_returns.loc[index]
+    equities_returns_vol = equities_returns_vol.loc[index]
+
+    return data, equities_returns, equities_returns_vol
