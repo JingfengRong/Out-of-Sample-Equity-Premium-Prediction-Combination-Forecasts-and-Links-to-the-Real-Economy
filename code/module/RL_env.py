@@ -2,6 +2,7 @@ import gym
 import numpy as np
 import pandas as pd
 from gym import spaces
+from typing import Dict, List, Tuple
 
 class TimeSeriesEnvBase(gym.Env):
     metadata = {"render_modes": "human"}
@@ -104,36 +105,43 @@ class EconMarketEnv(gym.Env):
     The environment is considered "done" if the episode reaches the last tick of the data.
     """
 
-    def __init__(self, data: pd.DataFrame, portfolio: pd.DataFrame, features: dict):
+    def __init__(self, data_dict: Dict[str, pd.DataFrame], gamma: float = 0.0):
         """
-        Initialize the environment.
+        Initializes the environment for the econ market gym.
 
         Parameters
         ----------
-        data : pandas.DataFrame
-            The input time series data of econ factors.
-        portfolio : pandas.DataFrame
-            The portfolio time series of each individual equity return.
+        data_dict : dict
+            A dictionary containing the different data frames needed for the environment.
+            The dictionary must contain the following keys:
+                - 'state': pandas.DataFrame
+                    The input time series data of econ factors.
+                - 'portfolio': pandas.DataFrame
+                    The portfolio time series of each individual equity return.
+                - 'features': pandas.DataFrame
+                    The features data frame containing volatility data for equities.
+        gamma : float, optional
+            The discount factor for the environment. Defaults to 0.0.
 
         Description
         -----------
-        We set the observation space and action space for our environment using OpenAI Gym's space API.
-        We also convert the data and portfolio to numpy arrays for performance reasons.
+        The observation space and action space are set for the environment using OpenAI Gym's space API.
+        The input data and portfolio are converted to numpy arrays for performance reasons.
         """
         super(EconMarketEnv, self).__init__()
         self.obs_space_size = 18
         self.num_equities = 2
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.obs_space_size,),dtype=np.float64)
-        self.action_space = spaces.Box(low=-1, high=1, dtype=np.float64)
-        self.data = data.values
-        self.index = data.index
-        self.portfolio = portfolio.values
-        self.features = features
+        self.action_space = spaces.Box(low=0, high=1, dtype=np.float64)
+        self.data = data_dict['state'].values
+        self.index = data_dict['state'].index
+        self.portfolio = data_dict['portfolio'].values
+        self.features = data_dict['features']
         self.equitites_vol = self.features['volatility'].values
         self._initial_check()
 
         self.start_tick = 0
-        self.end_tick = data.shape[0] - 2
+        self.end_tick = self.data.shape[0] - 2
         self.current_tick = None
         
         self.total_reward = 0
@@ -142,8 +150,7 @@ class EconMarketEnv(gym.Env):
         self.info = {}
         self.reward = 0.0
 
-        self.gamma = 0.0
-
+        self.gamma = gamma
 
     def reset(self, seed=None):
         '''
