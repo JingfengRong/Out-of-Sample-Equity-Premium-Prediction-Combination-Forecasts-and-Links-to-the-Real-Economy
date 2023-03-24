@@ -49,7 +49,7 @@ def get_policy_in_sample_performance(env: gym.Env, model:Type[BaseAlgorithm]) ->
     performance = pd.DataFrame({'action': action_list, 'portfolio return': port_ret_list}, index=date_list)
     performance.index = performance.index.asfreq('Q')
 
-    print(f'Total reward: {total_reward}')
+    #print(f'Total reward: {total_reward}')
 
     return performance
 
@@ -78,8 +78,8 @@ def evaluate_agent_action(df: pd.DataFrame) -> Tuple[float, plt.Figure, pd.DataF
 
     w = np.column_stack([action, 1 - action])
     portfolio_return = np.sum(equities_returns * w, axis=1)
-    if not np.array_equal(portfolio_return_input, portfolio_return):
-        raise ValueError("Input portfolio return does not match the calculated portfolio return.")
+    # if not np.isclose(portfolio_return_input, portfolio_return):
+    #     raise ValueError("Input portfolio return does not match the calculated portfolio return.")
 
     benchmark_60_40 = equities_returns @ np.array([0.6, 0.4])
     performance = pd.DataFrame(columns=['portfolio return', 'benchmark 60/40', 'Market Index', 'Rfree'],

@@ -277,9 +277,10 @@ class EconMarketEnv(gym.Env):
         '''
         w = np.array([action, 1 - action]).reshape(-1,)
         self.port_ret = w @ self.portfolio[self.current_tick + 1]
-        port_std = self.equitites_vol[self.current_tick + 1]
-        utility = self.port_ret - self.gamma * w ** 2 @ port_std ** 2
+        utility = (1 - np.exp(-self.gamma * self.port_ret)) / self.gamma if self.gamma != 0 else self.port_ret
+        # port_std = self.equitites_vol[self.current_tick + 1]
         # reward = np.log(self.port_ret + 1)
+        # utility = self.port_ret - self.gamma * w ** 2 @ port_std ** 2
     
         return utility
 

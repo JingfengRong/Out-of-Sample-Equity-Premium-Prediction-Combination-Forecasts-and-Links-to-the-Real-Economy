@@ -118,7 +118,7 @@ def get_p_value_of_MSPE_adjusted_test(y:np.ndarray, y_bar:np.ndarray, y_hat:np.n
     F = (y - y_bar) ** 2 - ((y - y_hat) ** 2 - (y_bar - y_hat) ** 2)
     dummy = np.ones_like(F)
     lm_result = sm.OLS(F, dummy).fit()
-    p_value = lm_result.pvalues.values[0]
+    p_value = lm_result.pvalues[0]
 
     return p_value
 
